@@ -1,0 +1,28 @@
+name: fetch-photo
+on:
+  push:
+    paths:
+      - '.github/workflows/fetch-photo.yml'
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  fetch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download photo from LinkedIn CDN
+        run: |
+          curl -sL -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36" \
+            -o marceloalbuja/profile.jpg \
+            'https://media.licdn.com/dms/image/v2/C4E03AQEMljGMP-RKEA/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1560108638950?e=1782950400&v=beta&t=UfDGjC8XbID6js2I4DYC79zGwIj1_WDRDEufWufUegI'
+          file marceloalbuja/profile.jpg | grep -q 'JPEG image data' || (echo 'NOT A JPEG' && head -c 200 marceloalbuja/profile.jpg && exit 1)
+          md5sum marceloalbuja/profile.jpg
+      - name: Commit photo
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add marceloalbuja/profile.jpg
+          git commit -m 'Add verified binary profile photo (800px original)'
+          git push
